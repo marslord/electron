@@ -16,6 +16,7 @@ declare namespace NodeJS {
   interface V8UtilBinding {
     getHiddenValue<T>(obj: any, key: string): T;
     setHiddenValue<T>(obj: any, key: string, value: T): void;
+    deleteHiddenValue<T>(obj: any, key: string): T;
     requestGarbageCollectionForTesting(): void;
   }
   interface Process {
