@@ -118,6 +118,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  base::WeakPtr<WebContents> GetWeakPtr() { return weak_factory_.GetWeakPtr(); }
+
   // Destroy the managed content::WebContents instance.
   //
   // Note: The |async| should only be |true| when users are expecting to use the
@@ -436,8 +438,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
   bool OnMessageReceived(const IPC::Message& message) override;
-  bool OnMessageReceived(const IPC::Message& message,
-                         content::RenderFrameHost* frame_host) override;
   void WebContentsDestroyed() override;
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
@@ -457,6 +457,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
       content::RenderFrameHost* render_frame_host,
       const std::string& interface_name,
       mojo::ScopedMessagePipeHandle* interface_pipe) override;
+  void DidAcquireFullscreen(content::RenderFrameHost* rfh) override;
 
   // InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;
@@ -511,6 +512,11 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void SetTemporaryZoomLevel(double level) override;
   void DoGetZoomLevel(DoGetZoomLevelCallback callback) override;
 
+  void ShowAutofillPopup(const gfx::RectF& bounds,
+                         const std::vector<base::string16>& values,
+                         const std::vector<base::string16>& labels) override;
+  void HideAutofillPopup() override;
+
   // Called when we receive a CursorChange message from chromium.
   void OnCursorChange(const content::WebCursor& cursor);
 
@@ -559,6 +565,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   mojo::BindingSet<mojom::ElectronBrowser, content::RenderFrameHost*> bindings_;
   std::map<content::RenderFrameHost*, std::vector<mojo::BindingId>>
       frame_to_bindings_map_;
+
+  base::WeakPtrFactory<WebContents> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(WebContents);
 };

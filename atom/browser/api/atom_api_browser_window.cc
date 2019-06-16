@@ -10,7 +10,6 @@
 #include "atom/browser/unresponsive_suppressor.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/browser/window_list.h"
-#include "atom/common/api/api_messages.h"
 #include "atom/common/api/constructor.h"
 #include "atom/common/color_util.h"
 #include "atom/common/native_mate_converters/callback.h"
@@ -67,7 +66,7 @@ BrowserWindow::BrowserWindow(v8::Isolate* isolate,
   }
 
   web_contents_.Reset(isolate, web_contents.ToV8());
-  api_web_contents_ = web_contents.get();
+  api_web_contents_ = web_contents->GetWeakPtr();
   api_web_contents_->AddObserver(this);
   Observe(api_web_contents_->web_contents());
 
@@ -94,7 +93,9 @@ BrowserWindow::BrowserWindow(v8::Isolate* isolate,
 }
 
 BrowserWindow::~BrowserWindow() {
-  api_web_contents_->RemoveObserver(this);
+  // FIXME This is a hack rather than a proper fix preventing shutdown crashes.
+  if (api_web_contents_)
+    api_web_contents_->RemoveObserver(this);
   // Note that the OnWindowClosed will not be called after the destructor runs,
   // since the window object is managed by the TopLevelWindow class.
   if (web_contents())
